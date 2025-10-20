@@ -1,0 +1,25 @@
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="/" style="margin-right:2rem;">SewTech</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav align-items-center">
+        <li class="nav-item">
+          <button (click)="irParaLogin()" class="btn btn-link nav-link">Login</button>
+        </li>
+  <li class="nav-item"><a class="nav-link" routerLink="/sobre">Sobre</a></li>
+  <li class="nav-item"><a class="nav-link" routerLink="/servicos">Serviços</a></li>
+  <li class="nav-item"><a class="nav-link" href="#contato">Contato</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>

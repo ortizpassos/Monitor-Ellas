@@ -1,0 +1,104 @@
+
+
+<div class="container">
+  @if (sucessoMsg) {
+    <div class="alert alert-success fade-in">
+      <div class="alert-icon success-icon"></div>
+      <span>{{ sucessoMsg }}</span>
+    </div>
+  }
+
+    <div class="register-header">
+      <h2 class="register-title">Criar nova conta</h2>
+      <p class="register-subtitle">Faça seu cadastro e controle sua produtividade</p>
+    </div>
+
+      @if (erroGeral) {
+        <div class="alert alert-error">
+          <div class="alert-icon error-icon"></div>
+          <span>{{ erroGeral }}</span>
+        </div>
+      }
+
+
+    <form (ngSubmit)="onSubmit()" class="register-form">
+      <!-- Dados Pessoais -->
+      <fieldset style="border:none; margin-bottom:1.5rem; padding:0;">
+        <legend style="font-size:1.1rem; font-weight:600; margin-bottom:0.5rem; color:#003366;">Dados Pessoais</legend>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName" class="form-label">Nome *</label>
+            <input id="firstName" type="text" placeholder="Seu nome" [(ngModel)]="dadosCadastro.firstName" name="firstName" autocomplete="given-name" [class]="'form-input ' + (erros['firstName'] ? 'input-error' : '')" />
+            @if (erros['firstName']) { <span class="error-message">{{ erros['firstName'] }}</span> }
+          </div>
+          <div class="form-group">
+            <label for="lastName" class="form-label">Sobrenome *</label>
+            <input id="lastName" type="text" placeholder="Seu sobrenome" [(ngModel)]="dadosCadastro.lastName" name="lastName" autocomplete="family-name" [class]="'form-input ' + (erros['lastName'] ? 'input-error' : '')" />
+            @if (erros['lastName']) { <span class="error-message">{{ erros['lastName'] }}</span> }
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="email" class="form-label">Email *</label>
+          <input id="email" type="email" placeholder="seu@email.com" [(ngModel)]="dadosCadastro.email" name="email" autocomplete="email" [class]="'form-input ' + (erros['email'] ? 'input-error' : '')" />
+          @if (erros['email']) { <span class="error-message">{{ erros['email'] }}</span> }
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone" class="form-label">Telefone</label>
+            <input id="phone" type="tel" placeholder="(11) 99999-9999" [(ngModel)]="dadosCadastro.phone" name="phone" autocomplete="tel" [class]="'form-input ' + (erros['phone'] ? 'input-error' : '')" />
+            @if (erros['phone']) { <span class="error-message">{{ erros['phone'] }}</span> }
+          </div>
+          <div class="form-group">
+            <label for="document" class="form-label">CPF</label>
+            <input id="document" type="text" placeholder="000.000.000-00" [(ngModel)]="dadosCadastro.document" name="document" autocomplete="off" [class]="'form-input ' + (erros['document'] ? 'input-error' : '')" />
+            @if (erros['document']) { <span class="error-message">{{ erros['document'] }}</span> }
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Dados de Acesso -->
+      <fieldset style="border:none; margin-bottom:1.5rem; padding:0;">
+          <div class="form-group">
+            <label for="password" class="form-label">Senha *</label>
+            <div class="password-input-group" style="position:relative;">
+              <input id="password" [type]="mostrarSenha ? 'text' : 'password'" placeholder="Crie uma senha" [(ngModel)]="dadosCadastro.password" name="password" autocomplete="new-password" [class]="'form-input ' + (erros['password'] ? 'input-error' : '')" style="padding-right:2.5rem;" />
+              <button type="button" class="password-toggle" (click)="togglePasswordVisibility()" [title]="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'" style="position:absolute; right:0.75rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; padding:0;">
+                <svg *ngIf="!mostrarSenha" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#888"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <svg *ngIf="mostrarSenha" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#888"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/></svg>
+              </button>
+            </div>
+            @if (erros['password']) { <span class="error-message">{{ erros['password'] }}</span> }
+          </div>
+        <div class="form-group">
+          <label for="confirmarSenha" class="form-label">Confirmar senha *</label>
+          <div class="password-input-group" style="position:relative;">
+            <input id="confirmarSenha" [type]="mostrarConfirmarSenha ? 'text' : 'password'" placeholder="Repita a senha" [(ngModel)]="confirmarSenha" name="confirmarSenha" autocomplete="new-password" [class]="'form-input ' + (erros['confirmarSenha'] ? 'input-error' : '')" style="padding-right:2.5rem;" />
+            <button type="button" class="password-toggle" (click)="toggleConfirmPasswordVisibility()" [title]="mostrarConfirmarSenha ? 'Ocultar senha' : 'Mostrar senha'" style="position:absolute; right:0.75rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; padding:0;">
+              <svg *ngIf="!mostrarConfirmarSenha" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#888"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              <svg *ngIf="mostrarConfirmarSenha" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#888"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/></svg>
+            </button>
+          </div>
+          @if (erros['confirmarSenha']) { <span class="error-message">{{ erros['confirmarSenha'] }}</span> }
+        </div>
+      </fieldset>
+
+      <!-- Termos de Uso -->
+      <div class="form-group termos" style="margin-bottom:1.5rem;">
+        <label>
+          <input type="checkbox" [(ngModel)]="aceitarTermos" name="termos" /> Aceito os <a href="#" target="_blank">Termos de Uso</a>
+        </label>
+      </div>
+
+      <!-- Ações -->
+      <button class="btn-cadastro" type="submit" [disabled]="carregando || !aceitarTermos">
+        {{ carregando ? 'Cadastrando...' : 'Cadastrar' }}
+      </button>
+      <div class="divider">ou</div>
+      <button class="btn-create" type="button" (click)="onSwitchToLogin()">Já tenho conta</button>
+    </form>
+
+  <div class="footer" style="margin-top: 32px; text-align: center;">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Flag_of_Brazil.svg" alt="Bandeira Brasil" style="width: 32px; height: 20px; object-fit: cover; vertical-align: middle;" />
+    <span class="lang" style="margin-left: 8px;">Português | English</span>
+  </div>
+

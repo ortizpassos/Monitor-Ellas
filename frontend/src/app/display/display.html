@@ -1,0 +1,104 @@
+<div class="display-container">
+  <!-- Cabeçalho -->
+  <header class="display-header">
+    <div class="header-content">
+      <h1>Monitor de Produção em Tempo Real</h1>
+      <div class="data-hora">{{ dataHoraAtual }}</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi-card">
+        <div class="kpi-icon">📊</div>
+        <div class="kpi-info">
+          <div class="kpi-label">Total Produzido Hoje</div>
+          <div class="kpi-value">{{ getTotalProducao() }}</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🏭</div>
+        <div class="kpi-info">
+          <div class="kpi-label">Funcionários Produzindo</div>
+          <div class="kpi-value">{{ dispositivos.length }}</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabela de Produção -->
+  <div class="display-content">
+    <table class="display-table">
+      <thead>
+        <tr>
+          <th>Funcionário</th>
+          <th>Operação</th>
+          <th>Grupo</th>
+          <th>Meta</th>
+          <th>Produção Atual</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let dispositivo of dispositivosPaginados">
+          <td class="funcionario-cell">
+            <div class="funcionario-icon" [class.icon-producao]="dispositivo.status === 'em_producao'" [class.icon-offline]="dispositivo.status === 'offline'">🧍‍♀️</div>
+            <span class="funcionario-nome">{{ dispositivo.funcionarioNome }}</span>
+          </td>
+          <td class="operacao-cell">
+            {{ dispositivo.operacaoNome }}
+          </td>
+          <td class="grupo-cell">
+            {{ dispositivo.operacaoSetor }}
+          </td>
+          <td class="meta-cell">
+            <span class="meta-valor">{{ dispositivo.operacaoMeta }}</span>
+          </td>
+          <td class="producao-cell">
+            <div class="producao-info">
+              <div class="producao-valores">
+                <span class="producao-atual">{{ dispositivo.producaoAtual || 0 }}</span>
+                <span class="producao-separador">/</span>
+                <span class="producao-meta">{{ dispositivo.operacaoMeta }}</span>
+              </div>
+              <div class="progress-container">
+                <div 
+                  class="progress-bar" 
+                  [style.width.%]="calcularPorcentagem(dispositivo.producaoAtual || 0, dispositivo.operacaoMeta)"
+                  [style.background-color]="getCorBarra(calcularPorcentagem(dispositivo.producaoAtual || 0, dispositivo.operacaoMeta))">
+                </div>
+                <span class="progress-text">
+                  {{ calcularPorcentagem(dispositivo.producaoAtual || 0, dispositivo.operacaoMeta) }}%
+                </span>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="dispositivos.length === 0" class="empty-state">
+      <div class="empty-icon">⏸️</div>
+      <p>Nenhum funcionário em produção no momento</p>
+    </div>
+
+    <!-- Indicador de paginação -->
+    <div *ngIf="totalPaginas > 1" class="pagination-indicator">
+      <div class="pagination-dots">
+        <span 
+          *ngFor="let page of [].constructor(totalPaginas); let i = index" 
+          class="dot" 
+          [class.active]="i === paginaAtual"
+          (click)="irParaPagina(i)">
+        </span>
+      </div>
+      <div class="pagination-info">
+        Página {{ paginaAtual + 1 }} de {{ totalPaginas }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Rodapé -->
+  <footer class="display-footer">
+    <div class="footer-content">
+      <span>Sistema de Monitoramento Industrial</span>
+      <span class="pulse-indicator">● Atualizando em tempo real</span>
+    </div>
+  </footer>
+</div>

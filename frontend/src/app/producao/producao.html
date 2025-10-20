@@ -1,0 +1,110 @@
+<div class="producao-layout">
+  <app-sidebar></app-sidebar>
+  <div class="producao-content">
+    <div class="producao-header">
+      <h2>Produção em Tempo Real</h2>
+      <div class="header-stats">
+        <div class="stat-card">
+          <span class="stat-label">Total Produzido Hoje</span>
+          <span class="stat-value">{{ totalProducaoHoje }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Dispositivos Ativos</span>
+          <span class="stat-value">{{ dispositivosAtivos }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Meta do Dia</span>
+          <span class="stat-value">{{ metaTotal }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">% Atingido</span>
+          <span class="stat-value">{{ percentualMeta }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Operações cadastradas -->
+    <div class="row justify-content-center mb-4">
+      <div class="col-lg-10">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="fw-bold text-primary mb-0">Operações Cadastradas</h4>
+          <button class="btn btn-primary btn-lg" (click)="abrirModalOperacao()">
+            <i class="bi bi-plus-lg"></i> Nova Operação
+          </button>
+        </div>
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-0">
+            <table class="table table-bordered table-striped table-hover align-middle mb-0 rounded shadow-sm overflow-hidden" style="background:#fff;">
+              <thead class="bg-gradient bg-primary text-white">
+                <tr>
+                  <th class="rounded-top-start">Nome da Operação</th>
+                  <th>Grupo/Setor</th>
+                  <th>Meta Diária</th>
+                  <th>Descrição</th>
+                  <th class="text-center rounded-top-end">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="operacoes.length === 0">
+                  <td colspan="5" class="text-center text-muted">Nenhuma operação cadastrada</td>
+                </tr>
+                <tr *ngFor="let op of operacoes">
+                  <td class="fw-semibold text-dark">{{ op.nome }}</td>
+                  <td>
+                    <span class="badge bg-primary px-3 py-2">{{ op.setor }}</span>
+                  </td>
+                  <td class="fw-bold text-primary">{{ op.metaDiaria }}</td>
+                  <td class="text-muted">{{ op.descricao || '-' }}</td>
+                  <td class="text-center">
+                    <button (click)="editarOperacao(op)" class="btn btn-sm btn-outline-warning me-2">
+                      <i class="bi bi-pencil"></i> Editar
+                    </button>
+                    <button (click)="excluirOperacao(op)" class="btn btn-sm btn-outline-danger">
+                      <i class="bi bi-trash"></i> Excluir
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Cadastro Operação -->
+    <div *ngIf="modalOperacaoAberto" class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.3);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ operacaoEditando ? 'Editar Operação' : 'Cadastrar Operação' }}</h5>
+            <button type="button" class="btn-close" (click)="fecharModalOperacao()"></button>
+          </div>
+          <form (ngSubmit)="cadastrarOperacao()" #formOperacao="ngForm" autocomplete="off">
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Nome da Operação:</label>
+                <input type="text" name="nome" [(ngModel)]="novaOperacao.nome" required class="form-control" autocomplete="off" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Meta Diária:</label>
+                <input type="number" name="metaDiaria" [(ngModel)]="novaOperacao.metaDiaria" required min="1" class="form-control" autocomplete="off" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Grupo/Setor:</label>
+                <input type="text" name="setor" [(ngModel)]="novaOperacao.setor" required class="form-control" autocomplete="off" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Descrição:</label>
+                <textarea name="descricao" [(ngModel)]="novaOperacao.descricao" class="form-control" rows="3" autocomplete="off"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary" [disabled]="formOperacao.invalid">Salvar</button>
+              <button type="button" (click)="fecharModalOperacao()" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    
