@@ -1,6 +1,6 @@
 /* Navbar */
 .navbar {
- background: linear-gradient(90deg, #ff7b00, #007bff ) !important;
+ background: linear-gradient(135deg, #007bff, #ff7b00 ) !important;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
