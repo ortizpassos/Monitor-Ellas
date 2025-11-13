@@ -42,6 +42,46 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
 io.on('connection', (socket) => {
+  // Evento para selecionar operação no dispositivo
+ socket.on('selecionarOperacao', async (data) => {
+  // data: { deviceToken, operacaoId }
+  const Dispositivo = require('./models/Dispositivo');
+  const Operacao = require('./models/Operacao');
+  let dispositivo = await Dispositivo.findOne({ deviceToken: data.deviceToken });
+  if (dispositivo && data.operacaoId) {
+    dispositivo.operacao = data.operacaoId;
+    dispositivo.status = 'em_producao'; // Só agora entra em produção
+
+    // Buscar produção atual do funcionário para esta operação e dispositivo
+    const Producao = require('./models/Producao');
+    const inicioDoDia = new Date();
+    inicioDoDia.setHours(0, 0, 0, 0);
+    const fimDoDia = new Date();
+    fimDoDia.setHours(23, 59, 59, 999);
+    let producaoExistente = await Producao.findOne({
+      funcionario: dispositivo.funcionarioLogado,
+      dispositivo: dispositivo._id,
+      operacao: data.operacaoId,
+      dataHora: { $gte: inicioDoDia, $lte: fimDoDia }
+    });
+    dispositivo.producaoAtual = producaoExistente ? producaoExistente.quantidade : 0;
+    await dispositivo.save();
+    // Popular operação e funcionário para enviar meta, nome e nome do funcionário
+    await dispositivo.populate('operacao');
+    await dispositivo.populate('funcionarioLogado');
+    io.emit('deviceStatusUpdate', dispositivo);
+    socket.emit('operacaoSelecionada', {
+      operacao: dispositivo.operacao ? {
+        _id: dispositivo.operacao._id,
+        nome: dispositivo.operacao.nome,
+        metaDiaria: dispositivo.operacao.metaDiaria
+      } : null,
+      producaoAtual: dispositivo.producaoAtual
+    });
+  } else {
+    socket.emit('operacaoSelecionada', { operacao: null, error: 'Dispositivo ou operação não encontrada' });
+  }
+});
 
   console.log('Novo dispositivo conectado:', socket.id);
 
@@ -60,30 +100,45 @@ io.on('connection', (socket) => {
     socket.emit('deviceRegistered', { success: true, message: 'Dispositivo registrado com sucesso!' });
   });
 
-  socket.on('loginFuncionario', async (data) => {
-    // Find device and update funcionarioLogado by codigo
-    const Dispositivo = require('./models/Dispositivo');
-    const Funcionario = require('./models/Funcionario');
-    let dispositivo = await Dispositivo.findOne({ deviceToken: data.deviceToken });
-    if (dispositivo) {
-      let funcionario = null;
-      if (data.codigo) {
-        funcionario = await Funcionario.findOne({ codigo: data.codigo });
-      } else if (data.funcionarioId) {
-        funcionario = await Funcionario.findById(data.funcionarioId);
-      }
-      dispositivo.funcionarioLogado = funcionario ? funcionario._id : null;
-      dispositivo.status = 'em_producao';
-      dispositivo.ultimaAtualizacao = new Date();
-      await dispositivo.save();
-      // Popular funcionarioLogado antes de emitir para o frontend
-      await dispositivo.populate('funcionarioLogado');
-      io.emit('deviceStatusUpdate', dispositivo);
-      socket.emit('loginSuccess', { funcionario: funcionario ? { nome: funcionario.nome } : { nome: '-' } });
-    } else {
-      socket.emit('loginFailed', { message: 'Dispositivo não encontrado' });
+ socket.on('loginFuncionario', async (data) => {
+  // Find device and update funcionarioLogado by codigo
+  const Dispositivo = require('./models/Dispositivo');
+  const Funcionario = require('./models/Funcionario');
+  const Operacao = require('./models/Operacao');
+  let dispositivo = await Dispositivo.findOne({ deviceToken: data.deviceToken });
+  if (dispositivo) {
+    let funcionario = null;
+    if (data.codigo) {
+      funcionario = await Funcionario.findOne({ codigo: data.codigo });
+    } else if (data.funcionarioId) {
+      funcionario = await Funcionario.findById(data.funcionarioId);
     }
-  });
+    if (!funcionario) {
+      socket.emit('loginFailed', { message: 'Funcionário não encontrado para a senha/código informado.' });
+      return;
+    }
+    dispositivo.funcionarioLogado = funcionario._id;
+    dispositivo.status = 'online'; // Mantém online até selecionar operação
+    dispositivo.ultimaAtualizacao = new Date();
+    await dispositivo.save();
+    // Popular funcionarioLogado antes de emitir para o frontend
+    await dispositivo.populate('funcionarioLogado');
+    io.emit('deviceStatusUpdate', dispositivo);
+
+    // Buscar operações ativas do usuário dono do dispositivo
+    let operacoes = [];
+    if (dispositivo.usuario) {
+      operacoes = await Operacao.find({ usuario: dispositivo.usuario, ativo: true }).sort({ nome: 1 });
+    }
+
+    socket.emit('loginSuccess', {
+      funcionario: { nome: funcionario.nome },
+      operacoes
+    });
+  } else {
+    socket.emit('loginFailed', { message: 'Dispositivo não encontrado' });
+  }
+});
 
   socket.on('producao', async (data) => {
     console.log('Produção recebida:', data);
@@ -132,6 +187,7 @@ io.on('connection', (socket) => {
           const novaProducao = new Producao({
             funcionario: dispositivo.funcionarioLogado,
             dispositivo: dispositivo._id,
+            operacao: dispositivo.operacao || null,
             quantidade: quantidade,
             tempoProducao: tempoProducao,
             dataHora: new Date()
@@ -141,10 +197,11 @@ io.on('connection', (socket) => {
         }
       }
       
-      // Popular funcionarioLogado antes de emitir para o frontend
-      await dispositivo.populate('funcionarioLogado');
-      console.log('Emitindo productionUpdate para frontend:', { dispositivo });
-      io.emit('productionUpdate', { dispositivo });
+  // Popular funcionarioLogado e operacao antes de emitir para o frontend
+  await dispositivo.populate('funcionarioLogado');
+  await dispositivo.populate('operacao');
+  console.log('Emitindo productionUpdate para frontend:', { dispositivo });
+  io.emit('productionUpdate', { dispositivo });
     } else {
       console.log('Dispositivo não encontrado para produção:', data.deviceToken);
     }
@@ -154,11 +211,20 @@ io.on('connection', (socket) => {
   socket.on('disconnect', async () => {
     // Atualiza status do dispositivo para offline ao desconectar
     const Dispositivo = require('./models/Dispositivo');
-    // Encontrar pelo socket.id não é possível, então é necessário que o ESP32 envie o deviceToken em algum momento e seja associado ao socket
-    // Para simplificação, pode-se manter um mapa socket.id -> deviceToken
+    // Se o deviceToken estiver associado ao socket, atualiza normalmente
     if (socket.deviceToken) {
       let dispositivo = await Dispositivo.findOne({ deviceToken: socket.deviceToken });
       if (dispositivo) {
+        dispositivo.status = 'offline';
+        dispositivo.ultimaAtualizacao = new Date();
+        await dispositivo.save();
+        io.emit('deviceStatusUpdate', dispositivo);
+      }
+    } else {
+      // Se não houver deviceToken, busca dispositivos 'online' com última atualização antiga (ex: >2 minutos)
+      const doisMinutosAtras = new Date(Date.now() - 2 * 60 * 1000);
+      let dispositivos = await Dispositivo.find({ status: 'online', ultimaAtualizacao: { $lt: doisMinutosAtras } });
+      for (const dispositivo of dispositivos) {
         dispositivo.status = 'offline';
         dispositivo.ultimaAtualizacao = new Date();
         await dispositivo.save();

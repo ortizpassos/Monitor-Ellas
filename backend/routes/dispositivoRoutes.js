@@ -50,6 +50,10 @@ router.patch("/:id", autenticar, async (req, res) => {
     const dispositivo = await Dispositivo.findById(req.params.id);
     if (!dispositivo) return res.status(404).json({ message: "Dispositivo não encontrado" });
 
+    // Bloquear alteração direta do campo 'status' via PATCH REST
+    if ('status' in req.body) {
+      delete req.body.status;
+    }
     Object.assign(dispositivo, req.body);
     await dispositivo.save();
     res.json(dispositivo);

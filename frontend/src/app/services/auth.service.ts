@@ -5,7 +5,9 @@ import { User, UserRegistration, UserLogin, AuthResponse } from '../models/user.
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = 'http://localhost:3001/api/auth';
+  private apiUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3001/api/auth'
+    : 'https://monitor-ellas-backend.onrender.com/api/auth';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private tokenSubject = new BehaviorSubject<string | null>(null);
 

@@ -12,6 +12,28 @@ import { Subscription } from 'rxjs';
   imports: [CommonModule]
 })
 export class DisplayComponent implements OnInit, OnDestroy {
+  splashParabens: { nome: string } | null = null;
+  private splashMostradoFuncionarios = new Set<string>();
+  // Retorna a soma da produção de todos os dispositivos na mesma operação
+  getProducaoTotalOperacao(operacaoId: string): number {
+    return this.dispositivos
+      .filter(d => d.operacao && d.operacao._id === operacaoId)
+      .reduce((acc, d) => acc + (d.producaoAtual || 0), 0);
+  }
+
+  // Retorna a meta da operação (assume igual para todos os dispositivos na mesma operação)
+  getMetaOperacao(operacaoId: string): number {
+    const dispositivo = this.dispositivos.find(d => d.operacao && d.operacao._id === operacaoId);
+    return dispositivo ? dispositivo.operacaoMeta : 0;
+  }
+
+  // Porcentagem geral da operação
+  calcularPorcentagemGeral(operacaoId: string): number {
+    const total = this.getProducaoTotalOperacao(operacaoId);
+    const meta = this.getMetaOperacao(operacaoId);
+    if (!meta || meta === 0) return 0;
+    return Math.min(Math.round((total / meta) * 100), 100);
+  }
   dispositivos: any[] = [];
   dispositivosPaginados: any[] = [];
   dataHoraAtual: string = '';
@@ -69,10 +91,10 @@ export class DisplayComponent implements OnInit, OnDestroy {
   carregarDispositivos() {
     this.dispositivosService.listarDispositivos().subscribe({
       next: (dados: any) => {
-        // Filtrar apenas dispositivos em produção
-        const dispositivosEmProducao = dados.filter((d: any) => d.status === 'em_producao');
-        
-        this.dispositivos = dispositivosEmProducao.map((d: any) => ({
+        // Exibir todos dispositivos com status 'online' ou 'em_producao', mesmo sem funcionário logado
+        const dispositivosConectados = dados.filter((d: any) => d.status === 'em_producao' || d.status === 'online');
+
+        this.dispositivos = dispositivosConectados.map((d: any) => ({
           ...d,
           funcionarioNome: d.funcionarioLogado?.nome || '-',
           operacaoNome: d.operacao?.nome || '-',
@@ -81,8 +103,8 @@ export class DisplayComponent implements OnInit, OnDestroy {
           statusClass: this.getStatusClass(d.status),
           statusTexto: this.getStatusTexto(d.status)
         }));
-        
-        console.log('Dispositivos em produção:', this.dispositivos);
+
+        console.log('Dispositivos conectados:', this.dispositivos);
         this.atualizarPaginacao();
       },
       error: (err: any) => {
@@ -93,15 +115,12 @@ export class DisplayComponent implements OnInit, OnDestroy {
 
   conectarSocket() {
     // Socket service já conecta automaticamente
-    
     // Escutar atualizações de produção
     const prodSub = this.socketService.onProductionUpdate().subscribe(data => {
       console.log('Atualização de produção recebida:', data);
-      
       // Apenas processar se o dispositivo está em produção
       if (data.dispositivo.status === 'em_producao') {
         const index = this.dispositivos.findIndex(d => d._id === data.dispositivo._id);
-        
         if (index !== -1) {
           // Atualizar dispositivo existente
           this.dispositivos[index] = {
@@ -131,8 +150,24 @@ export class DisplayComponent implements OnInit, OnDestroy {
           });
           this.atualizarPaginacao();
         }
-        
         this.atualizarDispositivosPaginados();
+
+        // Lógica do splash de parabéns (apenas uma vez por funcionário)
+        const producaoAtual = data.dispositivo.producaoAtual || 0;
+        const meta = data.dispositivo.operacao?.metaDiaria || 0;
+        const porcentagem = meta ? Math.round((producaoAtual / meta) * 100) : 0;
+        const funcionarioNome = data.dispositivo.funcionarioLogado?.nome;
+        if (
+          porcentagem >= 85 &&
+          funcionarioNome &&
+          !this.splashMostradoFuncionarios.has(funcionarioNome)
+        ) {
+          this.splashParabens = { nome: funcionarioNome };
+          this.splashMostradoFuncionarios.add(funcionarioNome);
+          setTimeout(() => {
+            this.splashParabens = null;
+          }, 4000); // Splash visível por 4 segundos
+        }
       } else {
         // Remover dispositivo que saiu de produção
         const index = this.dispositivos.findIndex(d => d._id === data.dispositivo._id);

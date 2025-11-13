@@ -11,6 +11,11 @@ const producaoSchema = new mongoose.Schema({
     ref: "Dispositivo",
     required: true,
   },
+  operacao: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Operacao",
+    default: null,
+  },
   quantidade: {
     type: Number,
     required: true,

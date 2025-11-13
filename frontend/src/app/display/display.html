@@ -1,4 +1,8 @@
 <div class="display-container">
+  <div *ngIf="splashParabens" class="splash-parabens">
+    <h2>Parabéns {{ splashParabens.nome }}!</h2>
+    <h2>Você bateu a meta!</h2>
+  </div>
   <!-- Cabeçalho -->
   <header class="display-header">
     <div class="header-content">
@@ -33,10 +37,11 @@
           <th>Grupo</th>
           <th>Meta</th>
           <th>Produção Atual</th>
+          <!-- <th>Status</th> -->
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let dispositivo of dispositivosPaginados">
+  <tr *ngFor="let dispositivo of dispositivosPaginados">
           <td class="funcionario-cell">
             <div class="funcionario-icon" [class.icon-producao]="dispositivo.status === 'em_producao'" [class.icon-offline]="dispositivo.status === 'offline'">🧍‍♀️</div>
             <span class="funcionario-nome">{{ dispositivo.funcionarioNome }}</span>
@@ -52,23 +57,21 @@
           </td>
           <td class="producao-cell">
             <div class="producao-info">
-              <div class="producao-valores">
-                <span class="producao-atual">{{ dispositivo.producaoAtual || 0 }}</span>
-                <span class="producao-separador">/</span>
-                <span class="producao-meta">{{ dispositivo.operacaoMeta }}</span>
-              </div>
               <div class="progress-container">
                 <div 
                   class="progress-bar" 
-                  [style.width.%]="calcularPorcentagem(dispositivo.producaoAtual || 0, dispositivo.operacaoMeta)"
-                  [style.background-color]="getCorBarra(calcularPorcentagem(dispositivo.producaoAtual || 0, dispositivo.operacaoMeta))">
+                  [style.width.%]="calcularPorcentagemGeral(dispositivo.operacao?._id)"
+                  [style.background-color]="getCorBarra(calcularPorcentagemGeral(dispositivo.operacao?._id))">
                 </div>
                 <span class="progress-text">
-                  {{ calcularPorcentagem(dispositivo.producaoAtual || 0, dispositivo.operacaoMeta) }}%
+                  {{ dispositivo.producaoAtual || 0 }} / {{ dispositivo.operacaoMeta }} peças &mdash; {{ calcularPorcentagemGeral(dispositivo.operacao?._id) }}%
                 </span>
               </div>
             </div>
           </td>
+          <!-- <td class="status-cell">
+            <span [ngClass]="dispositivo.statusClass">{{ dispositivo.statusTexto }}</span>
+          </td> -->
         </tr>
       </tbody>
     </table>

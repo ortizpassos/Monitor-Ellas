@@ -2,8 +2,9 @@
   <div class="brand d-flex align-items-center gap-2 px-3 py-2 border-bottom">
     <a class="logo fs-3" routerLink="/dashboard" aria-label="Ir para Dashboard">🏠</a>
     <div class="brand-text ms-2">
-      <h1 class="h5 mb-0 fw-bold text-primary">Production</h1>
-      <p class="mb-0 text-secondary" style="font-size:0.9rem;">Monitor</p>
+      <ng-container *ngIf="(auth.currentUser$ | async) as user">
+        <h1 class="h5 mb-0 fw-bold text-primary">{{ user.firstName }} {{ user.lastName }}</h1>
+      </ng-container>
     </div>
   </div>
   <div class="sidebar-actions mt-3">

@@ -34,7 +34,7 @@ router.get('/', autenticar, async (req, res) => {
       filtro.dispositivo = { $in: dispositivosFiltro.map(d => d._id) };
     }
     
-    // Agregação para agrupar por funcionário e dia
+    // Agregação para agrupar por funcionário e dia, substituindo dispositivo por operação
     const relatorios = await Producao.aggregate([
       { $match: filtro },
       {
@@ -47,20 +47,20 @@ router.get('/', autenticar, async (req, res) => {
       },
       {
         $lookup: {
-          from: 'dispositivos',
-          localField: 'dispositivo',
+          from: 'operacoes',
+          localField: 'operacao',
           foreignField: '_id',
-          as: 'dispositivoData'
+          as: 'operacaoData'
         }
       },
       { $unwind: { path: '$funcionarioData', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$dispositivoData', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$operacaoData', preserveNullAndEmptyArrays: true } },
       {
         $project: {
           dia: { $dateToString: { format: '%Y-%m-%d', date: '$dataHora' } },
           funcionario: '$funcionarioData.nome',
           funcionarioId: '$funcionario',
-          dispositivo: '$dispositivoData.nome',
+          operacao: '$operacaoData.nome',
           quantidade: 1,
           tempoProducao: 1
         }
@@ -70,11 +70,11 @@ router.get('/', autenticar, async (req, res) => {
           _id: {
             dia: '$dia',
             funcionarioId: '$funcionarioId',
-            funcionario: '$funcionario'
+            funcionario: '$funcionario',
+            operacao: '$operacao'
           },
           totalProducao: { $sum: '$quantidade' },
-          totalTempo: { $sum: '$tempoProducao' },
-          dispositivos: { $addToSet: '$dispositivo' }
+          totalTempo: { $sum: '$tempoProducao' }
         }
       },
       {
@@ -82,12 +82,12 @@ router.get('/', autenticar, async (req, res) => {
           _id: 0,
           dia: '$_id.dia',
           funcionario: '$_id.funcionario',
+          operacao: '$_id.operacao',
           totalProducao: 1,
-          totalTempo: 1,
-          dispositivos: 1
+          totalTempo: 1
         }
       },
-      { $sort: { dia: -1, funcionario: 1 } }
+      { $sort: { dia: -1, funcionario: 1, operacao: 1 } }
     ]);
     
     console.log('Relatórios agrupados por funcionário e dia:', relatorios.length);

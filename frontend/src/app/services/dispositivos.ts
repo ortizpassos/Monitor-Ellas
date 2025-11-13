@@ -20,7 +20,9 @@ export interface Dispositivo {
   providedIn: 'root'
 })
 export class DispositivosService {
-  private apiUrl = 'http://localhost:3001/api/dispositivos';
+  private apiUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3001/api/dispositivos'
+    : 'https://monitor-ellas-backend.onrender.com/api/dispositivos';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

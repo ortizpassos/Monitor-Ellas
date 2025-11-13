@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './services/auth.guard';
 
 export const routes: Routes = [
 	{
@@ -15,20 +16,33 @@ export const routes: Routes = [
 	},
 	{
 		path: 'funcionarios',
+		canActivate: [authGuard],
 		loadChildren: () => import('./funcionarios/funcionarios-module').then(m => m.FuncionariosModule)
 	},
 	{
 		path: 'dispositivos',
+		canActivate: [authGuard],
 		loadChildren: () => import('./dispositivos/dispositivos-module').then(m => m.DispositivosModule)
 	},
-	
 	{
 		path: 'dashboard',
-		loadChildren: () => import('./dashboard/dashboard-module').then(m => m.DashboardModule)	
+		canActivate: [authGuard],
+		loadChildren: () => import('./dashboard/dashboard-module').then(m => m.DashboardModule)    
 	},
 	{
 		path: 'producao',
+		canActivate: [authGuard],
 		loadComponent: () => import('./producao/producao').then(m => m.ProducaoComponent)
+	},
+	{
+		path: 'relatorios',
+		canActivate: [authGuard],
+		loadComponent: () => import('./relatorios/relatorios').then(m => m.RelatoriosComponent)
+	},
+	{
+		path: 'display',
+		canActivate: [authGuard],
+		loadComponent: () => import('./display/display').then(m => m.DisplayComponent)
 	},
 	{
 		path: 'sobre',
@@ -37,13 +51,5 @@ export const routes: Routes = [
 	{
 		path: 'servicos',
 		loadComponent: () => import('./servicos/servicos').then(m => m.ServicosComponent)
-	},
-	{
-		path: 'relatorios',
-		loadComponent: () => import('./relatorios/relatorios').then(m => m.RelatoriosComponent)
-	},
-	{
-		path: 'display',
-		loadComponent: () => import('./display/display').then(m => m.DisplayComponent)
 	}
 ];

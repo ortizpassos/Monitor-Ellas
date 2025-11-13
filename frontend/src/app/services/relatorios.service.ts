@@ -13,6 +13,7 @@ export class RelatoriosService {
     dataFim?: string;
     funcionario?: string;
     dispositivo?: string;
+    operacao?: string;
   }): Observable<any[]> {
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
@@ -21,6 +22,7 @@ export class RelatoriosService {
     if (filtros.dataFim) params = params.set('dataFim', filtros.dataFim);
     if (filtros.funcionario) params = params.set('funcionario', filtros.funcionario);
     if (filtros.dispositivo) params = params.set('dispositivo', filtros.dispositivo);
-    return this.http.get<any[]>(this.apiUrl, { headers, params });
+  if (filtros.operacao) params = params.set('operacao', filtros.operacao);
+  return this.http.get<any[]>(this.apiUrl, { headers, params });
   }
 }

@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -10,9 +12,14 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./navbar.css']
 })
 export class NavbarComponent {
-  constructor(private router: Router) {}
+  constructor(private router: Router, public auth: AuthService) {}
 
   irParaLogin() {
     this.router.navigate(['/login']);
+  }
+
+  sair() {
+    this.auth.logout();
+    this.router.navigate(['/']);
   }
 }

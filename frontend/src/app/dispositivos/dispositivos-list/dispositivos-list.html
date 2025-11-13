@@ -31,10 +31,13 @@
                       <td class="fw-semibold text-dark">{{ dispositivo.nome }}</td>
                       <td>
                         <span class="badge px-3 py-2" [ngClass]="{
-                          'bg-success': dispositivo.status === 'online' || dispositivo.status === 'em_producao',
+                          'bg-success': dispositivo.status === 'online',
+                          'bg-primary': dispositivo.status === 'em_producao',
                           'bg-danger': dispositivo.status === 'offline',
                           'bg-secondary': dispositivo.status === 'ocioso'
-                        }">{{ dispositivo.status }}</span>
+                        }">
+                          {{ dispositivo.status === 'em_producao' ? 'Produzindo' : dispositivo.status }}
+                        </span>
                       </td>
                       <td class="text-center">
                         <button (click)="abrirEdicao(dispositivo)" class="btn btn-sm btn-outline-warning me-2">

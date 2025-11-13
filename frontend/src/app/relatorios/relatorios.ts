@@ -17,7 +17,7 @@ export class RelatoriosComponent implements OnInit {
   filtroDataInicio: string = '';
   filtroDataFim: string = '';
   filtroFuncionario: string = '';
-  filtroDispositivo: string = '';
+  filtroOperacao: string = '';
   relatorios: any[] = [];
   totalFuncionario: number = 0;
 
@@ -32,21 +32,21 @@ export class RelatoriosComponent implements OnInit {
       dataInicio: this.filtroDataInicio,
       dataFim: this.filtroDataFim,
       funcionario: this.filtroFuncionario,
-      dispositivo: this.filtroDispositivo
+      operacao: this.filtroOperacao
     });
     
     this.relatoriosService.buscarRelatorios({
       dataInicio: this.filtroDataInicio,
       dataFim: this.filtroDataFim,
       funcionario: this.filtroFuncionario,
-      dispositivo: this.filtroDispositivo
+      operacao: this.filtroOperacao
     }).subscribe({
       next: (dados) => {
         console.log('Dados recebidos do backend:', dados);
         this.relatorios = dados.map(r => ({
           data: r.dia, // Data no formato YYYY-MM-DD
           funcionario: r.funcionario || '-',
-          dispositivos: r.dispositivos.filter((d: any) => d).join(', ') || '-',
+          operacao: r.operacao || '-',
           producao: r.totalProducao || 0,
           tempo: this.formatarTempo(r.totalTempo || 0)
         }));
@@ -101,8 +101,8 @@ export class RelatoriosComponent implements OnInit {
       yPos += 6;
     }
     
-    if (this.filtroDispositivo) {
-      doc.text(`Dispositivo: ${this.filtroDispositivo}`, 14, yPos);
+    if (this.filtroOperacao) {
+      doc.text(`Operação: ${this.filtroOperacao}`, 14, yPos);
       yPos += 6;
     }
     
@@ -114,11 +114,11 @@ export class RelatoriosComponent implements OnInit {
     // Tabela
     autoTable(doc, {
       startY: yPos + 14,
-      head: [['Data', 'Funcionário', 'Dispositivo(s)', 'Produção', 'Tempo']],
+      head: [['Data', 'Funcionário', 'Operação', 'Produção', 'Tempo']],
       body: this.relatorios.map(r => [
         new Date(r.data).toLocaleDateString('pt-BR'),
         r.funcionario,
-        r.dispositivos,
+        r.operacao,
         r.producao.toString(),
         r.tempo
       ]),
