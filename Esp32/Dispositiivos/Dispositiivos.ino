@@ -15,14 +15,14 @@
 // ========================
 // CONFIGURAÇÕES DE REDE
 // ========================
-const char* ssid = "ELLASFACCAO2.4G";
-const char* password = "Ellasfaccao25";
+const char* ssid = "Use o seu 4G";
+const char* password = "d1985A2025.";
 
 // ========================
 // CONFIGURAÇÕES DO SERVIDOR
 // ========================
-const char* socketIoHost = "192.168.0.49"; // IP do servidor Node.js
-const int socketIoPort = 3001;              // Porta do servidor Socket.IO
+const char* socketIoHost = "monitor-ellas-backend.onrender.com"; // Domínio do backend (sem https:// para beginSSL)
+const int socketIoPort = 443;              // Porta padrão HTTPS
 
 // Identificadores do dispositivo e funcionário
 const char* deviceToken = "461545616614166";
@@ -78,9 +78,18 @@ void setup() {
   Serial.println();
   Serial.printf("Wi-Fi conectado! IP: %s\n", WiFi.localIP().toString().c_str());
 
-  // Conectar ao servidor Socket.IO
-  Serial.println("Conectando ao servidor Socket.IO...");
-  socketIO.begin(socketIoHost, socketIoPort);
+  // Restaurar dados persistidos
+  prefs.begin("prod", true);
+  funcionarioSenha = prefs.getString("senha", "");
+  operacaoId = prefs.getString("operacaoId", "");
+  operacaoNome = prefs.getString("operacaoNome", "");
+  metaDiaria = prefs.getInt("metaDiaria", 0);
+  quantidade = prefs.getInt("quantidade", 0);
+  prefs.end();
+
+  // Conectar ao servidor Socket.IO via SSL
+  Serial.println("Conectando ao servidor Socket.IO (SSL)...");
+  socketIO.beginSSL(socketIoHost, socketIoPort);
   socketIO.onEvent(socketIOEvent);
   // Não solicita senha aqui, aguarda conexão Socket.IO
 }
@@ -207,6 +216,12 @@ void handleSocketEvent(uint8_t * payload) {
       serializeJson(opdoc, opjson);
       socketIO.sendEVENT(String("[\"selecionarOperacao\",") + opjson + "]");
       Serial.println("Aguardando confirmação da operação...");
+      // Salva operação selecionada
+      prefs.begin("prod", false);
+      prefs.putString("operacaoId", operacaoId);
+      prefs.putString("operacaoNome", operacaoNome);
+      prefs.putInt("metaDiaria", metaDiaria);
+      prefs.end();
     }
   }
 
@@ -223,6 +238,13 @@ void handleSocketEvent(uint8_t * payload) {
       }
       Serial.printf("Operação carregada no dispositivo: %s (meta: %d, produção inicial: %d)\n", operacaoNome.c_str(), metaDiaria, quantidade);
       Serial.println("Pronto para iniciar produção!");
+      // Salva operação e quantidade
+      prefs.begin("prod", false);
+      prefs.putString("operacaoId", operacaoId);
+      prefs.putString("operacaoNome", operacaoNome);
+      prefs.putInt("metaDiaria", metaDiaria);
+      prefs.putInt("quantidade", quantidade);
+      prefs.end();
     } else {
       Serial.println("Erro ao carregar operação no dispositivo!");
     }
@@ -252,6 +274,10 @@ void loginFuncionario() {
   serializeJson(doc, output);
   socketIO.sendEVENT(String("[\"loginFuncionario\",") + output + "]");
   Serial.printf("➡️ Enviando login do funcionário (dispositivo %s, código: %s)\n", deviceToken, funcionarioSenha.c_str());
+  // Salva senha do funcionário
+  prefs.begin("prod", false);
+  prefs.putString("senha", funcionarioSenha);
+  prefs.end();
 }
 
 // ========================
@@ -262,9 +288,13 @@ void sendProductionData() {
     Serial.println("⚠️ Nenhuma operação selecionada. Produção não enviada.");
     return;
   }
-  // Simula entre 1 e 5 peças
-  int tempoProducao = random(100, 100); // Tempo em ms
+  // Simula tempo de produção entre 100 e 500 ms
+  int tempoProducao = random(100, 500); // Tempo em ms
   quantidade ++;
+  // Salva quantidade atual
+  prefs.begin("prod", false);
+  prefs.putInt("quantidade", quantidade);
+  prefs.end();
 
   DynamicJsonDocument doc(256);
   doc["deviceToken"] = deviceToken;

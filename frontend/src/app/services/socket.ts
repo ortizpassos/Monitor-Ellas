@@ -8,7 +8,9 @@ import { Observable } from 'rxjs';
 })
 export class SocketService {
   private socket: any;
-  private apiUrl = 'http://localhost:3001';
+  private apiUrl = window.location.hostname === 'localhost'
+    ? 'http://localhost:3001'
+    : 'https://monitor-ellas-backend.onrender.com';
 
   constructor() {
   this.socket = io.default(this.apiUrl);

@@ -15,7 +15,9 @@ export interface Funcionario {
   providedIn: 'root'
 })
 export class FuncionariosService {
-  private apiUrl = 'http://localhost:3001/api/funcionarios';
+  private apiUrl = window.location.hostname === 'localhost'
+    ? 'http://localhost:3001/api/funcionarios'
+    : 'https://monitor-ellas-backend.onrender.com/api/funcionarios';
 
   constructor(private http: HttpClient) {}
 

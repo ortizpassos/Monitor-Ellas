@@ -99,7 +99,10 @@ export class Dashboard implements OnInit, AfterViewInit {
     }
     
     // Apenas atualiza o gráfico, produção do dia já é calculada em loadDispositivos
-    this.http.get<any[]>('http://localhost:3001/api/producao', { headers }).subscribe({
+    const apiUrl = window.location.hostname === 'localhost'
+      ? 'http://localhost:3001/api/producao'
+      : 'https://monitor-ellas-backend.onrender.com/api/producao';
+    this.http.get<any[]>(apiUrl, { headers }).subscribe({
       next: (producao) => {
         console.log('Dados de produção recebidos:', producao);
         if (Array.isArray(producao)) {

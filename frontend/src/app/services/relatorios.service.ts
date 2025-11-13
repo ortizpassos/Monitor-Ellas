@@ -4,7 +4,9 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class RelatoriosService {
-  private apiUrl = 'http://localhost:3001/api/relatorios';
+  private apiUrl = window.location.hostname === 'localhost'
+    ? 'http://localhost:3001/api/relatorios'
+    : 'https://monitor-ellas-backend.onrender.com/api/relatorios';
 
   constructor(private http: HttpClient) {}
 

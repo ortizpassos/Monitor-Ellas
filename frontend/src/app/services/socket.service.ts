@@ -7,7 +7,10 @@ export class SocketService {
   private socket: SocketIOClient.Socket;
 
   constructor() {
-    this.socket = ioClient.connect('http://localhost:3001');
+    const socketUrl = window.location.hostname === 'localhost'
+      ? 'http://localhost:3001'
+      : 'https://monitor-ellas-backend.onrender.com';
+    this.socket = ioClient.connect(socketUrl);
   }
 
   onDeviceStatusUpdate(): Observable<any> {
