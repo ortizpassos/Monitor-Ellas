@@ -13,7 +13,9 @@ export interface Operacao {
 
 @Injectable({ providedIn: 'root' })
 export class OperacoesService {
-  private apiUrl = '/api/operacoes';
+  private apiUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3001/api/operacoes'
+    : 'https://monitor-ellas-backend.onrender.com/api/operacoes';
 
   constructor(private http: HttpClient) {}
 
