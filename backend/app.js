@@ -71,15 +71,24 @@ io.on('connection', (socket) => {
     await dispositivo.populate('funcionarioLogado');
     io.emit('deviceStatusUpdate', dispositivo);
     socket.emit('operacaoSelecionada', {
-      operacao: dispositivo.operacao ? {
-        _id: dispositivo.operacao._id,
-        nome: dispositivo.operacao.nome,
-        metaDiaria: dispositivo.operacao.metaDiaria
-      } : null,
-      producaoAtual: dispositivo.producaoAtual
+      data: {
+        deviceToken: data.deviceToken,
+        operacao: dispositivo.operacao ? {
+          _id: dispositivo.operacao._id,
+          nome: dispositivo.operacao.nome,
+          metaDiaria: dispositivo.operacao.metaDiaria
+        } : null,
+        producaoAtual: dispositivo.producaoAtual
+      }
     });
   } else {
-    socket.emit('operacaoSelecionada', { operacao: null, error: 'Dispositivo ou operação não encontrada' });
+    socket.emit('operacaoSelecionada', { 
+      data: {
+        deviceToken: data.deviceToken,
+        operacao: null, 
+        error: 'Dispositivo ou operação não encontrada' 
+      }
+    });
   }
 });
 
@@ -96,8 +105,25 @@ io.on('connection', (socket) => {
       await dispositivo.save();
       // Emit update to all clients
       io.emit('deviceStatusUpdate', dispositivo);
+
+      socket.emit('deviceRegistered', { 
+        success: true, 
+        message: 'Dispositivo registrado e vinculado!',
+        data: {
+          deviceToken: data.deviceToken,
+          usuarioVinculado: true
+        }
+      });
+    } else {
+      socket.emit('deviceRegistered', { 
+        success: true, 
+        message: 'Dispositivo conectado, aguardando vínculo.',
+        data: {
+          deviceToken: data.deviceToken,
+          usuarioVinculado: false
+        }
+      });
     }
-    socket.emit('deviceRegistered', { success: true, message: 'Dispositivo registrado com sucesso!' });
   });
 
  socket.on('loginFuncionario', async (data) => {
@@ -107,12 +133,19 @@ io.on('connection', (socket) => {
   const Operacao = require('./models/Operacao');
   let dispositivo = await Dispositivo.findOne({ deviceToken: data.deviceToken });
   if (dispositivo) {
+    if (!dispositivo.usuario) {
+       socket.emit('loginFailed', { message: 'Dispositivo não vinculado a um usuário.' });
+       return;
+    }
+
     let funcionario = null;
     if (data.codigo) {
-      funcionario = await Funcionario.findOne({ codigo: data.codigo });
+      // Verifica funcionário pelo código E pelo usuário do dispositivo
+      funcionario = await Funcionario.findOne({ codigo: data.codigo, usuario: dispositivo.usuario });
     } else if (data.funcionarioId) {
-      funcionario = await Funcionario.findById(data.funcionarioId);
+      funcionario = await Funcionario.findOne({ _id: data.funcionarioId, usuario: dispositivo.usuario });
     }
+    
     if (!funcionario) {
       socket.emit('loginFailed', { message: 'Funcionário não encontrado para a senha/código informado.' });
       return;
@@ -132,8 +165,15 @@ io.on('connection', (socket) => {
     }
 
     socket.emit('loginSuccess', {
-      funcionario: { nome: funcionario.nome },
-      operacoes
+      data: {
+        deviceToken: data.deviceToken,
+        funcionario: { nome: funcionario.nome },
+        operacoes: operacoes.map(op => ({
+          _id: op._id,
+          nome: op.nome,
+          metaDiaria: op.metaDiaria
+        }))
+      }
     });
   } else {
     socket.emit('loginFailed', { message: 'Dispositivo não encontrado' });

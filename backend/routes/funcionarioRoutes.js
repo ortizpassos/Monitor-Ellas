@@ -1,11 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const Funcionario = require("../models/Funcionario");
+const { autenticar } = require("./authRoutes");
+
+// Aplicar middleware em todas as rotas
+router.use(autenticar);
 
 // Criar novo funcionário
 router.post("/", async (req, res) => {
   try {
-    const novoFuncionario = new Funcionario(req.body);
+    const funcionarioData = { ...req.body, usuario: req.usuario.id };
+    const novoFuncionario = new Funcionario(funcionarioData);
     await novoFuncionario.save();
     res.status(201).json(novoFuncionario);
   } catch (err) {
@@ -13,10 +18,10 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Obter todos os funcionários
+// Obter todos os funcionários (do usuário logado)
 router.get("/", async (req, res) => {
   try {
-    const funcionarios = await Funcionario.find();
+    const funcionarios = await Funcionario.find({ usuario: req.usuario.id });
     res.json(funcionarios);
   } catch (err) {
     res.status(500).json({ message: err.message });
