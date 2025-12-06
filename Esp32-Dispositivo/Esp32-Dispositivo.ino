@@ -60,8 +60,8 @@ void on_wifi_connected() {
 
     wifi_connected = true;
     go_token();
-    // Iniciar conexão Socket.IO segura (WSS)
-    socketIO.begin(host, port, "/socket.io/?EIO=4", "wss");
+    // Iniciar conexão Socket.IO segura (WSS) alinhada ao Engine.IO v3 (Socket.IO 2.x)
+    socketIO.beginSSL(host, port, "/socket.io/?EIO=3&transport=websocket");
     socketIO.onEvent(socketIOEvent);
   }
 }
